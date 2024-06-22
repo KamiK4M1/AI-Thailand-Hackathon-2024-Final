@@ -1,6 +1,6 @@
 from fastapi import FastAPI, File, UploadFile
 from fastapi.responses import JSONResponse
-from transformers import Blip2Processor, Blip2ForConditionalGeneration, AutoModelForCausalLM, AutoTokenizer
+from transformers import Blip2Processor, Blip2ForConditionalGeneration
 from PIL import Image
 import io
 import torch
@@ -22,24 +22,24 @@ client = Groq(
     api_key='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',
 ) #Groq API llama-70b
 
-
-
 @app.post("/image-to-text")
 async def image_to_text(file: UploadFile = File(...)):
-    # Read the uploaded file
-    image_data = await file.read()
+    try:
+        # Read the uploaded file
+        image_data = await file.read()
 
-    # Open the image
-    image = Image.open(io.BytesIO(image_data))
+        # Open the image
+        image = Image.open(io.BytesIO(image_data))
 
-    inputs = processor(images=image, return_tensors="pt").to(device)
+        inputs = processor(images=image, return_tensors="pt").to(device)
 
-    # Get the image description
-    generated_ids = model.generate(**inputs, max_new_tokens=60, early_stopping=True, no_repeat_ngram_size=3)
-    description = processor.batch_decode(generated_ids, skip_special_tokens=True)
+        # Get the image description
+        generated_ids = model.generate(**inputs, max_new_tokens=60, early_stopping=True, no_repeat_ngram_size=3)
+        description = processor.batch_decode(generated_ids, skip_special_tokens=True)
 
-    return JSONResponse(content={"description": description[0]})
-
+        return JSONResponse(content={"description": description[0]})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 @app.post("/llm")
 async def llm(text: str):
@@ -69,29 +69,32 @@ async def llm(text: str):
             คำบรรยาย: {text}
             ราคาประมาณ: """
     
-    stream = client.chat.completions.create(
-        messages=[
-            {
-            "role": "system",
-            "content": "คุณเป็นนักประเมินสินเชื่อประเภทอสังหาริมทรัพย์ โดยคุณจะต้องทำการประเมินราคาจากคำบรรยายของบ้าน โดยยึดหลักจากกรมธนารักษฺ์แห่งประเทศไทย"
-            },
-            {
-            "role": "user",
-            "content": prompt,
-            }
-        ],
-        model="llama3-70b-8192",
-        temperature=0.7,
-        max_tokens=2000,
-        top_p=1,
-        stop=None,
-        stream=True,
-    )
+    try:
+        response = client.chat.completions.create(
+            messages=[
+                {
+                    "role": "system",
+                    "content": "คุณเป็นนักประเมินสินเชื่อประเภทอสังหาริมทรัพย์ โดยคุณจะต้องทำการประเมินราคาจากคำบรรยายของบ้าน โดยยึดหลักจากกรมธนารักษ์แห่งประเทศไทย"
+                },
+                {
+                    "role": "user",
+                    "content": prompt,
+                }
+            ],
+            model="llama3-70b-8192",
+            temperature=0.7,
+            max_tokens=2000,
+            top_p=1,
+            stop=None,
+            stream=False,  # Setting to False for non-streaming response
+        )
 
-    print(stream)
+        # Extract the response text from the LLM
+        result = response['choices'][0]['message']['content'].strip()
 
-    return JSONResponse(content={"response": stream})
-
+        return JSONResponse(content={"response": result})
+    except Exception as e:
+        return JSONResponse(content={"error": str(e)}, status_code=500)
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
