@@ -90,7 +90,7 @@ async def llm(text: str):
         )
 
         # Extract the response text from the LLM
-        result = response['choices'][0]['message']['content'].strip()
+        result = response.choices[0].message["content"].strip()
 
         return JSONResponse(content={"response": result})
     except Exception as e:
