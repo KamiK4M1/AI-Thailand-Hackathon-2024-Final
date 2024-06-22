@@ -16,7 +16,7 @@ app = FastAPI()
 
 # Initialize the image-to-text pipeline
 processor = Blip2Processor.from_pretrained("kxm1k4m1/icu-mama-cooking")
-model = Blip2ForConditionalGeneration.from_pretrained("kxm1k4m1/icu-mama-cooking", device_map=device, torch_dtype=torch.int8).to(device)
+model = Blip2ForConditionalGeneration.from_pretrained("kxm1k4m1/icu-mama-cooking", device_map=device, load_in_8bit=True).to(device)
 model2 = AutoModelForCausalLM.from_pretrained(
     "KBTG-Labs/THaLLE-0.1-7B-fa",
     torch_dtype=torch.bfloat16,
