@@ -1,5 +1,5 @@
 from fastapi import FastAPI, File, UploadFile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from transformers import Blip2Processor, Blip2ForConditionalGeneration
 from PIL import Image
 import io
@@ -86,13 +86,16 @@ async def llm(text: str):
             max_tokens=2000,
             top_p=1,
             stop=None,
-            stream=False,  # Setting to False for non-streaming response
+            stream=True,  # Setting to False for non-streaming response
         )
 
         # Extract the response text from the LLM
-        result = response.choices[0].message["content"].strip()
+        async def stream_response(response):
+            async for message in response.stream():
+                yield message['content'].encode()
 
-        return JSONResponse(content={"response": result})
+        return StreamingResponse(stream_response(response), media_type="text/plain")
+    
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
