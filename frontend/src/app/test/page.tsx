@@ -80,6 +80,7 @@ const Upload: React.FC = () => {
         console.log("Stream chunk received:", streamingText);
         // Update state or handle streamingText as needed
         setSecondApiOutput(streamingText);
+        console.log(streamingText)
 
         // Continue reading next chunk
         await decodeStream();

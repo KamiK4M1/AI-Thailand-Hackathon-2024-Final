@@ -93,7 +93,8 @@ async def llm(text: str):
         async def stream_response(response):
             async for message in response.stream():
                 yield message['content'].encode()
-
+                
+        print(stream_response)
         return StreamingResponse(stream_response(response), media_type="text/plain")
     
     except Exception as e:
