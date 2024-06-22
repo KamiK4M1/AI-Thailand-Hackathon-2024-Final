@@ -19,8 +19,8 @@ processor = Blip2Processor.from_pretrained("kxm1k4m1/icu-mama-cooking")
 model = Blip2ForConditionalGeneration.from_pretrained("kxm1k4m1/icu-mama-cooking", device_map=device, torch_dtype=torch.bfloat16).to(device)
 model2 = AutoModelForCausalLM.from_pretrained(
     "KBTG-Labs/THaLLE-0.1-7B-fa",
-    torch_dtype="auto",
-    device_map="auto"
+    torch_dtype=torch.bfloat16,
+    device_map=device
 ).to(device)
 tokenizer = AutoTokenizer.from_pretrained("KBTG-Labs/THaLLE-0.1-7B-fa")
 
