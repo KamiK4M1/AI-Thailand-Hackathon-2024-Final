@@ -1,14 +1,12 @@
-"use client"
+"use client";
 import React, { useState } from 'react';
 import axios from 'axios';
-import styles from '../components/css/ArrowIndicator.module.css';
-// import Navbar from '../components/Navbar';
 
 const Upload: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<FileList | null>(null);
   const [predict, setPredict] = useState<string | null>(null);
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [userInput, setUserInput] = useState<string>('');
+  const [secondApiOutput, setSecondApiOutput] = useState<string | null>(null);
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
@@ -17,10 +15,6 @@ const Upload: React.FC = () => {
       const urls = Array.from(files).map(file => URL.createObjectURL(file));
       setImageUrls(urls);
     }
-  };
-
-  const handleTextInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    setUserInput(event.target.value);
   };
 
   const handleUpload = async () => {
@@ -53,27 +47,18 @@ const Upload: React.FC = () => {
 
   const handleReupload = async () => {
     try {
-      if (!selectedFile || selectedFile.length === 0) {
-        console.error('No files selected');
+      if (!predict) {
+        console.error('No prediction available');
         return;
       }
 
-      for (let i = 0; i < selectedFile.length; i++) {
-        const formData = new FormData();
-        formData.append('file', selectedFile[i]);
-        formData.append('text', userInput);
-        console.log(formData);
-        await axios.post('https://your-second-upload-endpoint', formData, {
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        });
+      const response = await axios.post('https://api-obon.conf.in.th/team13/llm', null, {
+        params: {
+          text: predict,
+        },
+      });
 
-        // Wait for a short period before sending the next file
-        formData.delete('file');
-        formData.delete('text');
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
+      setSecondApiOutput(response.data.response); // Assuming the API returns a field called 'response'
     } catch (error) {
       console.error('Error re-uploading file:', error);
     }
@@ -81,7 +66,6 @@ const Upload: React.FC = () => {
 
   return (
     <div>
-      {/* <Navbar/> */}
       <div className='hero min-h-[100vh] bg-base-20'>
         <div className='hero-content text-center'>
           <div className="max-w-md">
@@ -107,24 +91,28 @@ const Upload: React.FC = () => {
                   </div>
                 ))}
               </div>
-              <div className="mockup-code mt-12 font-black p-5">
-                <pre><code>{predict !== null ? predict : ''}</code></pre>
-              </div>
+              {predict && (
+                <div className="mt-12 p-5 bg-black border border-gray-300 rounded-lg">
+                  <pre className="text-lg font-semibold text-gray-400 whitespace-pre-wrap fon">
+                    <code>{predict}</code>
+                  </pre>
+                </div>
+              )}
               {predict && (
                 <div className='mt-10'>
-                  <input 
-                    type="text" 
-                    value={userInput} 
-                    onChange={handleTextInputChange} 
-                    className='input input-bordered input-info w-full max-w-xs' 
-                    placeholder="Enter additional text" 
-                  />
                   <button 
                     onClick={handleReupload} 
                     className='btn btn-outline btn-primary mt-10'
                   >
-                    Re-upload with Text
+                    Re-upload with Prediction
                   </button>
+                </div>
+              )}
+              {secondApiOutput && (
+                <div className="mt-10 p-5 bg-blue-100 border border-blue-300 rounded-lg">
+                  <pre className="text-lg font-semibold text-blue-700 whitespace-pre-wrap">
+                    <code>{secondApiOutput}</code>
+                  </pre>
                 </div>
               )}
             </div>
