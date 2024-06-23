@@ -122,6 +122,8 @@ async def llm(text: str):
     generated_ids = model2.generate(model_inputs.input_ids, max_new_tokens=512)
     response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
+    print(response)
+
     return JSONResponse(content={"response": response})
 
 
