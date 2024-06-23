@@ -14,6 +14,18 @@ gc.collect()
 
 app = FastAPI()
 
+def remove_text_before_assistant(text):
+    # หาอินเด็กซ์ของคำว่า "assistant"
+    index = text.find("assistant")
+    
+    # ถ้าพบคำว่า "assistant" ให้ตัดข้อความก่อนหน้าออก
+    if index != -1:
+        return text[index:]
+    else:
+        # ถ้าไม่พบคำว่า "assistant" ให้คืนค่าเดิม
+        return text
+
+
 # Initialize the image-to-text pipeline
 processor = Blip2Processor.from_pretrained("kxm1k4m1/icu-mama-cooking")
 model = Blip2ForConditionalGeneration.from_pretrained("kxm1k4m1/icu-mama-cooking", device_map=device, torch_dtype=torch.bfloat16).to(device)
@@ -122,9 +134,9 @@ async def llm(text: str):
     generated_ids = model2.generate(model_inputs.input_ids, max_new_tokens=512)
     response = tokenizer.batch_decode(generated_ids, skip_special_tokens=True)[0]
 
-    print(response)
+    cleaned_text = remove_text_before_assistant(response)
 
-    return JSONResponse(content={"response": response})
+    return JSONResponse(content={"response": cleaned_text})
 
 
 if __name__ == "__main__":
